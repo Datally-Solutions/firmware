@@ -1,0 +1,44 @@
+name: Build firmware
+permissions:
+  contents: 'read'
+on:
+  workflow_call:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install PlatformIO
+      run: pip install platformio
+
+    - name: Create secrets.h
+      run: |
+        cat > src/secrets.h << EOF
+        #pragma once
+        const char* ssid      = "${{ secrets.SSID }}";
+        const char* password  = "${{ secrets.PASSWORD }}";
+        const String botToken = "${{ secrets.BOTTOKEN }}";
+        const String chatId   = "${{ secrets.CHATID }}";
+        const char* sheetsWebhookUrl   = "${{ secrets.SHEETS_WEBHOOK_URL }}";
+        const char* ingestUrl   = "${{ secrets.ingestUrl }}";
+        const char* ingestToken = "${{ secrets.ingestToken }}";
+        EOF
+
+    - name: Build firmware
+      run: pio run
+
+    - name: Upload firmware artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware
+        path: .pio/build/m5stack-atom/firmware.bin
+        retention-days: 30

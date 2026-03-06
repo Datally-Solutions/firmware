@@ -1,0 +1,54 @@
+name: Run Checks
+permissions:
+  contents: 'read'
+on:
+  workflow_call:
+env:
+  python-version: 3.11
+
+jobs:
+
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get install -y clang-format
+
+      - name: Check formatting
+        run: |
+          clang-format --dry-run --Werror src/main.cpp
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=all \
+                   --suppress=missingInclude \
+                   --suppress=missingIncludeSystem \
+                   --suppress=unusedFunction \
+                   --suppress=unmatchedSuppression \
+                   --error-exitcode=1 \
+                   src/main.cpp
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile tests
+        run: |
+          g++ -std=c++17 -I tests/mocks -o test_diagnostic tests/test_diagnostic.cpp && ./test_diagnostic
+          g++ -std=c++17 -I tests/mocks -o test_notifier tests/test_notifier.cpp && ./test_notifier
+
+      - name: Run tests
+        run: |
+          ./test_diagnostic
+          ./test_notifier

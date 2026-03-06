@@ -1,0 +1,23 @@
+concurrency: # Cancel any previous runs from the same branch
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+name: CI CD Pipeline
+on:
+  push:
+    branches:
+      - 'dev'
+      - 'main'
+env:
+  python-version: 3.11
+jobs:
+
+  run-checks:
+    uses: ./.github/workflows/run-checks.yml
+    secrets: inherit
+
+  build:
+    if: github.ref == 'refs/heads/main' # Only run build on main branch
+    needs: run-checks
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
