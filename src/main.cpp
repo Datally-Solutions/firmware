@@ -1,3 +1,4 @@
+#include <ESP32.h>
 #include <ElegantOTA.h>
 #include <M5Atom.h>
 #include <Preferences.h>
@@ -5,7 +6,6 @@
 #include <WiFi.h>
 #include <esp_ota_ops.h>
 #include <esp_task_wdt.h>
-#include <ESP32.h>
 
 #include "HX711.h"
 #include "config.h"
@@ -177,12 +177,9 @@ void setup() {
 
     uint64_t chipid = ESP.getEfuseMac();
     char id[18];
-    snprintf(id, sizeof(id), "%04X%08X",
-        (uint16_t)(chipid >> 32),
-        (uint32_t)chipid
-    );
+    snprintf(id, sizeof(id), "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
     deviceId = String(id);
-    
+
     addLog("Device ID: " + deviceId);
 
     // Notification démarrage
@@ -349,7 +346,8 @@ void traiterSortieChat() {
     verifierConnexion();
     envoyerNotification(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
     envoyerDonneesSheets(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
-    envoyerDonneesGCP(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte, deviceId);
+    envoyerDonneesGCP(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte,
+                      deviceId);
 
     // Reset
     esp_task_wdt_reset();
