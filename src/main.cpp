@@ -1,4 +1,3 @@
-#include <ESP32.h>
 #include <ElegantOTA.h>
 #include <M5Atom.h>
 #include <Preferences.h>
