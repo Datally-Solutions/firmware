@@ -100,12 +100,12 @@ void envoyerDonneesSheets(String chat, String action, float poids, float poids_c
 
 // --- GOOGLE CLOUD RUN INGEST ---
 void envoyerDonneesGCP(String chat, String action, float poids, float poids_chat,
-                       unsigned long duree, String alerte) {
+                       unsigned long duree, String alerte, String deviceId) {
     WiFiClientSecure client;
     client.setInsecure();
     HTTPClient http;
-
     String payload = "{";
+    payload += "\"device_id\":\"" + deviceId + "\",";
     payload += "\"chat\":\"" + chat + "\",";
     payload += "\"action\":\"" + action + "\",";
     payload += "\"poids\":" + String(poids, 1) + ",";

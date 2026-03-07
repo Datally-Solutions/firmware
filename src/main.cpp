@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <esp_ota_ops.h>
 #include <esp_task_wdt.h>
+#include <ESP32.h>
 
 #include "HX711.h"
 #include "config.h"
@@ -46,6 +47,8 @@ void traiterSortieChat();
 void detecterNettoyage();
 
 Preferences prefs;
+
+String deviceId;
 
 // ---------------------------------------------------------------------------
 // SETUP
@@ -171,6 +174,16 @@ void setup() {
 
     M5.dis.fillpix(LED_VERT);
     addLog("Système prêt et calibré.");
+
+    uint64_t chipid = ESP.getEfuseMac();
+    char id[18];
+    snprintf(id, sizeof(id), "%04X%08X",
+        (uint16_t)(chipid >> 32),
+        (uint32_t)chipid
+    );
+    deviceId = String(id);
+    
+    addLog("Device ID: " + deviceId);
 
     // Notification démarrage
     verifierConnexion();
@@ -336,7 +349,7 @@ void traiterSortieChat() {
     verifierConnexion();
     envoyerNotification(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
     envoyerDonneesSheets(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
-    envoyerDonneesGCP(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
+    envoyerDonneesGCP(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte, deviceId);
 
     // Reset
     esp_task_wdt_reset();
