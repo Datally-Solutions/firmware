@@ -49,3 +49,5 @@ secrets.h
 
 #VSCode
 .vscode/
+
+.DS_Store

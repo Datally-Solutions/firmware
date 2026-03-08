@@ -8,6 +8,9 @@
 #include "logger.h"
 #include "secrets.h"
 
+extern String wifiSsid;
+extern String wifiPassword;
+
 // --- RECONNEXION WIFI ---
 void verifierConnexion() {
     if (WiFi.status() == WL_CONNECTED) return;
@@ -16,7 +19,7 @@ void verifierConnexion() {
     M5.dis.fillpix(LED_ROUGE_SOMBRE);
 
     WiFi.disconnect();
-    WiFi.begin(ssid, password);
+    WiFi.begin(wifiSsid, wifiPassword);
 
     int tentative = 0;
     while (WiFi.status() != WL_CONNECTED && tentative < 20) {

@@ -11,6 +11,7 @@
 #include "diagnostic.h"
 #include "logger.h"
 #include "notifier.h"
+#include "provisioning.h"
 #include "secrets.h"
 
 // --- BALANCE ---
@@ -49,6 +50,10 @@ Preferences prefs;
 
 String deviceId;
 
+// --- WIFI CREDENTIALS (loaded from NVS) ---
+String wifiSsid;
+String wifiPassword;
+
 // ---------------------------------------------------------------------------
 // SETUP
 // ---------------------------------------------------------------------------
@@ -57,13 +62,23 @@ void setup() {
     btStop();
     M5.begin(false, false, true);
 
-    // WiFi
+    // ── WiFi ──────────────────────────────────────────────────────────────────
     M5.dis.fillpix(LED_BLEU);
-    WiFi.mode(WIFI_STA);
-    WiFi.setSleep(false);
-    WiFi.begin(ssid, password);
-    addLog("Connexion Wi-Fi...");
-    while (WiFi.status() != WL_CONNECTED) delay(500);
+
+    bool hasCredentials = chargerCredentialsWifi(wifiSsid, wifiPassword);
+
+    if (hasCredentials) {
+        bool connected = connecterWifi(wifiSsid, wifiPassword);
+        if (!connected) {
+            addLog("Credentials invalides. Démarrage mode provisioning...");
+            demarrerModeProvisionning(deviceId);
+        }
+    } else {
+        addLog("Première utilisation. Démarrage mode provisioning...");
+        demarrerModeProvisionning(deviceId);
+    }
+
+    // If we reach here WiFi is connected ✅
     addLog("Wi-Fi Connecté ! IP : " + WiFi.localIP().toString());
 
     // NVS — load "how long ago" and convert to current millis() base
@@ -145,6 +160,14 @@ void setup() {
         html += logBuffer.length() > 0 ? logBuffer : "Aucun log pour le moment.";
         html += "</body></html>";
         server.send(200, "text/html", html);
+    });
+
+    server.on("/reset-wifi", []() {
+        prefs.remove("wifi_ssid");
+        prefs.remove("wifi_pass");
+        server.send(200, "text/plain", "WiFi réinitialisé. Redémarrage...");
+        delay(1000);
+        ESP.restart();
     });
 
     // OTA
