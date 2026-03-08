@@ -1,9 +1,9 @@
 #pragma once
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <Preferences.h>
 #include <WebServer.h>
 #include <WiFi.h>
-#include <ArduinoJson.h>
 
 #include "logger.h"
 
@@ -12,7 +12,7 @@ extern Preferences prefs;
 bool chargerCredentialsWifi(String& ssid, String& password) {
     Preferences localPrefs;
     localPrefs.begin("litiere", true);  // read-only
-    ssid     = localPrefs.getString("wifi_ssid", "");
+    ssid = localPrefs.getString("wifi_ssid", "");
     password = localPrefs.getString("wifi_pass", "");
     localPrefs.end();
     addLog("NVS load — ssid: " + ssid);
@@ -70,7 +70,8 @@ void demarrerModeProvisionning(const String& deviceId) {
     // ── GET /ping — app polls this to detect ESP32 hotspot connection ─────────
     apServer.on("/ping", HTTP_GET, [&]() {
         apServer.sendHeader("Access-Control-Allow-Origin", "*");
-        apServer.send(200, "application/json", "{\"status\":\"ok\",\"device\":\"" + deviceId + "\"}");
+        apServer.send(200, "application/json",
+                      "{\"status\":\"ok\",\"device\":\"" + deviceId + "\"}");
     });
 
     // ── GET /networks — returns scanned WiFi networks as JSON ─────────────────
@@ -80,9 +81,9 @@ void demarrerModeProvisionning(const String& deviceId) {
         JsonArray networks = doc.createNestedArray("networks");
         for (int i = 0; i < n && i < 20; i++) {
             JsonObject net = networks.createNestedObject();
-            net["ssid"]    = WiFi.SSID(i);
-            net["rssi"]    = WiFi.RSSI(i);
-            net["secure"]  = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
+            net["ssid"] = WiFi.SSID(i);
+            net["rssi"] = WiFi.RSSI(i);
+            net["secure"] = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
         }
         String json;
         serializeJson(doc, json);
@@ -106,7 +107,7 @@ void demarrerModeProvisionning(const String& deviceId) {
             return;
         }
 
-        pendingSsid     = doc["ssid"].as<String>();
+        pendingSsid = doc["ssid"].as<String>();
         pendingPassword = doc["password"].as<String>();
 
         if (pendingSsid.isEmpty()) {

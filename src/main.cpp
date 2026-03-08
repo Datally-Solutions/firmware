@@ -62,6 +62,13 @@ void setup() {
     btStop();
     M5.begin(false, false, true);
 
+    uint64_t chipid = ESP.getEfuseMac();
+    char id[18];
+    snprintf(id, sizeof(id), "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
+    deviceId = String(id);
+
+    addLog("Device ID: " + deviceId);
+
     // ── WiFi ──────────────────────────────────────────────────────────────────
     M5.dis.fillpix(LED_BLEU);
 
@@ -196,13 +203,6 @@ void setup() {
 
     M5.dis.fillpix(LED_VERT);
     addLog("Système prêt et calibré.");
-
-    uint64_t chipid = ESP.getEfuseMac();
-    char id[18];
-    snprintf(id, sizeof(id), "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
-    deviceId = String(id);
-
-    addLog("Device ID: " + deviceId);
 
     // Notification démarrage
     verifierConnexion();
