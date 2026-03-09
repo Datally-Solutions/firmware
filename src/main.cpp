@@ -75,14 +75,19 @@ void setup() {
     bool hasCredentials = chargerCredentialsWifi(wifiSsid, wifiPassword);
 
     if (hasCredentials) {
-        bool connected = connecterWifi(wifiSsid, wifiPassword);
+        bool connected = false;
+        for (int attempt = 0; attempt < 3 && !connected; attempt++) {
+            if (attempt > 0) {
+                addLog("Retry WiFi attempt " + String(attempt + 1));
+                WiFi.disconnect();  // clean slate before retry
+                delay(2000);
+            }
+            connected = connecterWifi(wifiSsid, wifiPassword);
+        }
         if (!connected) {
             addLog("Credentials invalides. Démarrage mode provisioning...");
             demarrerModeProvisionning(deviceId);
         }
-    } else {
-        addLog("Première utilisation. Démarrage mode provisioning...");
-        demarrerModeProvisionning(deviceId);
     }
 
     // If we reach here WiFi is connected ✅

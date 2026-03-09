@@ -29,7 +29,7 @@ void sauvegarderCredentialsWifi(const String& ssid, const String& password) {
 }
 
 // ─── Connect with saved credentials ──────────────────────────────────────────
-bool connecterWifi(const String& ssid, const String& password, int maxTentatives = 20) {
+bool connecterWifi(const String& ssid, const String& password, int maxTentatives = 40) {
     addLog("Connexion Wi-Fi à : " + ssid);
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
