@@ -10,7 +10,7 @@ const float CALIBRATION_SCALE = 24.79f;
 // --- SEUILS POIDS (kg) ---
 const float SEUIL_ENTREE_KG = 2.0;
 const float SEUIL_SORTIE_KG = 1.0;
-const float SEUIL_NETTOYAGE_KG = -0.15;
+const float SEUIL_NETTOYAGE_KG = -0.30;
 
 // --- IDENTIFICATION CHATS (kg) ---
 const float SEUIL_SULLY_MIN = 2.5;
@@ -20,11 +20,11 @@ const float SEUIL_KROKMOU_MAX = 9.0;
 
 // --- SEUILS DIAGNOSTIC SULLY (g) ---
 const float SULLY_VISITE_MAX = 10.0;
-const float SULLY_PIPI_MAX = 35.0;
+const float SULLY_PIPI_MAX = 50.0;
 
 // --- SEUILS DIAGNOSTIC KROKMOU (g) ---
 const float KROKMOU_VISITE_MAX = 20.0;
-const float KROKMOU_PIPI_MAX = 70.0;
+const float KROKMOU_PIPI_MAX = 90.0;
 
 // --- SEUILS DIAGNOSTIC INCONNU (g) ---
 const float INCONNU_VISITE_MAX = 15.0;
@@ -57,3 +57,5 @@ const uint32_t LED_VERT = 0x00ff00;
 const uint32_t LED_ORANGE = 0xffa500;
 const uint32_t LED_CYAN = 0x00ffff;
 const uint32_t LED_ROUGE_SOMBRE = 0x330000;
+
+const unsigned long NETTOYAGE_COOLDOWN_MS = 30000;  // 30s after exit before cleaning can trigger

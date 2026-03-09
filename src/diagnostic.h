@@ -33,7 +33,10 @@ void setCouleurChat(String nomChat) {
 void calculerDiagnostic(String nomChat, float poids, unsigned long duree, String& diagnostic,
                         String& alerte) {
     if (nomChat == "Sully") {
-        if (poids < SULLY_VISITE_MAX) {
+        if (poids < 0) {
+            diagnostic = "Simple visite";
+            return;
+        } else if (poids < SULLY_VISITE_MAX) {
             diagnostic = "Simple visite";
             if (duree > DUREE_GRATTAGE_S) alerte = "*Alerte :* Grattage long sans résultat.";
         } else if (poids < SULLY_PIPI_MAX) {
@@ -52,7 +55,10 @@ void calculerDiagnostic(String nomChat, float poids, unsigned long duree, String
             sauvegarderTimestamps();
         }
     } else if (nomChat == "Krokmou") {
-        if (poids < KROKMOU_VISITE_MAX) {
+        if (poids < 0) {
+            diagnostic = "Simple visite";
+            return;
+        } else if (poids < KROKMOU_VISITE_MAX) {
             diagnostic = "Simple visite";
             if (duree > DUREE_GRATTAGE_S) alerte = "*Alerte :* Grattage long sans résultat.";
         } else if (poids < KROKMOU_PIPI_MAX) {
@@ -71,7 +77,10 @@ void calculerDiagnostic(String nomChat, float poids, unsigned long duree, String
             sauvegarderTimestamps();
         }
     } else {
-        if (poids < INCONNU_VISITE_MAX)
+        if (poids < 0) {
+            diagnostic = "Simple visite";
+            return;
+        } else if (poids < INCONNU_VISITE_MAX)
             diagnostic = "Simple visite";
         else if (poids < INCONNU_PIPI_MAX)
             diagnostic = "Pipi 🟡";

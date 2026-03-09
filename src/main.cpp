@@ -39,6 +39,8 @@ unsigned long krokmouDernierCaca = 0;
 String logBuffer = "";
 int logLineCount = 0;
 
+unsigned long lastExitTime = 0;
+
 // ---------------------------------------------------------------------------
 // FORWARD DECLARATIONS
 // ---------------------------------------------------------------------------
@@ -267,7 +269,8 @@ void loop() {
     }
 
     // 4. Détection nettoyage
-    if (weight < SEUIL_NETTOYAGE_KG && !occupe && !exitPending) {
+    if (weight < SEUIL_NETTOYAGE_KG && !occupe && !exitPending &&
+        (millis() - lastExitTime > NETTOYAGE_COOLDOWN_MS)) {
         detecterNettoyage();
     }
 
@@ -384,6 +387,7 @@ void traiterSortieChat() {
     tempsEntree = 0;
     M5.dis.fillpix(LED_VERT);
     addLog("Balance remise à zéro.");
+    lastExitTime = millis();
 }
 
 void detecterNettoyage() {
