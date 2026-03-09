@@ -61,14 +61,14 @@ void test_diagnostic_sully_petit_pipi() {
 
 void test_diagnostic_sully_caca() {
     String d, a;
-    calculerDiagnostic("Sully", 40.0, 100, d, a);
+    calculerDiagnostic("Sully", 60.0, 100, d, a);
     assert(d == "Caca 🟤");
     std::cout << "✅ Sully caca OK\n";
 }
 
 void test_diagnostic_sully_gros_pipi() {
     String d, a;
-    calculerDiagnostic("Sully", 40.0, 60, d, a);
+    calculerDiagnostic("Sully", 60.0, 60, d, a);
     assert(d == "Gros Pipi 🟡");
     std::cout << "✅ Sully gros pipi OK\n";
 }
@@ -89,7 +89,7 @@ void test_diagnostic_krokmou_pipi() {
 
 void test_diagnostic_krokmou_caca() {
     String d, a;
-    calculerDiagnostic("Krokmou", 80.0, 100, d, a);
+    calculerDiagnostic("Krokmou", 100.0, 100, d, a);
     assert(d == "Caca 🟤");
     std::cout << "✅ Krokmou caca OK\n";
 }
