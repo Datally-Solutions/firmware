@@ -49,14 +49,16 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
+          token_format: "access_token"
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+          service_account: ${{ secrets.CICD_SA_EMAIL }}
 
       - name: Upload firmware to GCS
         uses: google-github-actions/upload-cloud-storage@v2
         with:
           path: .pio/build/m5stack-atom/firmware.bin
           destination: ${{ secrets.GCP_PROJECT_ID }}-firmware/${{ steps.version.outputs.sha }}
+          process_gcloudignore: false
 
       - name: Generate and upload latest.json
         run: |
@@ -73,6 +75,7 @@ jobs:
         with:
           path: latest.json
           destination: ${{ secrets.GCP_PROJECT_ID }}-firmware
+          process_gcloudignore: false
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
