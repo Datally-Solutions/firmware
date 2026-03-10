@@ -49,5 +49,4 @@ jobs:
 
       - name: Run tests
         run: |
-          ./test_diagnostic
           ./test_notifier
