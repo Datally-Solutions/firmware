@@ -5,7 +5,7 @@
 #define LOADCELL_SCK_PIN 26
 
 // --- CALIBRATION BALANCE ---
-const float CALIBRATION_SCALE = 1.0f;
+const float CALIBRATION_SCALE = 22.54f;
 
 // --- SEUILS POIDS (kg) ---
 const float SEUIL_ENTREE_KG = 2.0;
@@ -17,7 +17,7 @@ const unsigned long DUREE_SESSION_MAX_MS = 600000;  // 10 min anti-blocage
 const unsigned long EXIT_STABILISATION_MS = 5000;   // attente après sortie
 const unsigned long NETTOYAGE_ATTENTE_MS = 5000;    // attente après poids négatif
 const unsigned long WIFI_CHECK_INTERVAL = 30000;    // vérif WiFi toutes les 30s
-const unsigned long WDT_TIMEOUT_S = 30;             // watchdog timeout
+const unsigned long WDT_TIMEOUT_S = 60;             // watchdog timeout
 
 // --- LOGS ---
 const int MAX_LOG_LINES = 50;
