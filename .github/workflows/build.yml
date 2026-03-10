@@ -1,43 +1,64 @@
-name: Build firmware
-permissions:
-  contents: 'read'
+name: Firmware Build & Upload
+
 on:
-  workflow_call:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'platformio.ini'
+      - 'partitions_ota.csv'
+  workflow_dispatch:
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install PlatformIO
-      run: pip install platformio
+      - name: Install PlatformIO
+        run: pip install platformio
 
-    - name: Create secrets.h
-      run: |
-        cat > src/secrets.h << EOF
-        #pragma once
-        const char* ssid      = "${{ secrets.SSID }}";
-        const char* password  = "${{ secrets.PASSWORD }}";
-        const String botToken = "${{ secrets.BOTTOKEN }}";
-        const String chatId   = "${{ secrets.CHATID }}";
-        const char* ingestUrl   = "${{ secrets.ingestUrl }}";
-        const char* ingestToken = "${{ secrets.ingestToken }}";
-        EOF
+      - name: Build firmware
+        run: pio run
 
-    - name: Build firmware
-      run: pio run
+      - name: Get version
+        id: version
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Upload firmware artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: firmware
-        path: .pio/build/m5stack-atom/firmware.bin
-        retention-days: 30
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Upload firmware to GCS
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: .pio/build/m5stack-atom/firmware.bin
+          destination: ${{ secrets.GCP_PROJECT_ID }}-firmware/${{ steps.version.outputs.sha }}
+
+      - name: Update latest.json
+        run: |
+          echo '{
+            "version": "${{ steps.version.outputs.sha }}",
+            "url": "https://storage.googleapis.com/${{ secrets.GCP_PROJECT_ID }}-firmware/${{ steps.version.outputs.sha }}/firmware.bin",
+            "built_at": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+          }' > latest.json
+
+      - name: Upload latest.json
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: latest.json
+          destination: ${{ secrets.GCP_PROJECT_ID }}-firmware
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: .pio/build/m5stack-atom/firmware.bin
+          retention-days: 30
