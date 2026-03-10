@@ -143,6 +143,14 @@ void setup() {
         ESP.restart();
     });
 
+    server.on("/test-scale", []() {
+        float raw = scale.get_units(5);
+        float rawDiv1000 = scale.get_units(5) / 1000.0;
+        String result = "raw=" + String(raw, 3) + " | /1000=" + String(rawDiv1000, 3);
+        addLog("TEST SCALE: " + result);
+        server.send(200, "text/plain", result);
+    });
+
     // OTA
     ElegantOTA.begin(&server);
     ElegantOTA.setAutoReboot(true);
