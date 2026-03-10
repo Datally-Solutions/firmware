@@ -8,7 +8,6 @@
 
 #include "HX711.h"
 #include "config.h"
-#include "diagnostic.h"
 #include "logger.h"
 #include "notifier.h"
 #include "provisioning.h"
@@ -28,12 +27,6 @@ bool otaInProgress = false;
 unsigned long tempsEntree = 0;
 unsigned long exitDetectedAt = 0;
 unsigned long dernierCheckWifi = 0;
-
-// --- SUIVI DERNIÈRE ACTIVITÉ ---
-unsigned long sullyDernierPipi = 0;
-unsigned long sullyDernierCaca = 0;
-unsigned long krokmouDernierPipi = 0;
-unsigned long krokmouDernierCaca = 0;
 
 // --- LOGS ---
 String logBuffer = "";
@@ -97,20 +90,6 @@ void setup() {
 
     // NVS — load "how long ago" and convert to current millis() base
     prefs.begin("litiere", false);
-    unsigned long now = millis();
-    unsigned long agoSPipi = prefs.getULong("s_pipi", 0);
-    unsigned long agoSCaca = prefs.getULong("s_caca", 0);
-    unsigned long agoKPipi = prefs.getULong("k_pipi", 0);
-    unsigned long agoKCaca = prefs.getULong("k_caca", 0);
-
-    sullyDernierPipi = agoSPipi > 0 ? now - agoSPipi : 0;
-    sullyDernierCaca = agoSCaca > 0 ? now - agoSCaca : 0;
-    krokmouDernierPipi = agoKPipi > 0 ? now - agoKPipi : 0;
-    krokmouDernierCaca = agoKCaca > 0 ? now - agoKCaca : 0;
-
-    addLog("NVS chargé — s_pipi=" + String(agoSPipi / 3600000) + "h ago" + " s_caca=" +
-           String(agoSCaca / 3600000) + "h ago" + " k_pipi=" + String(agoKPipi / 3600000) +
-           "h ago" + " k_caca=" + String(agoKCaca / 3600000) + "h ago");
 
     // Watchdog
     esp_task_wdt_init(WDT_TIMEOUT_S, true);
@@ -121,14 +100,6 @@ void setup() {
         String html = "<html><head><meta charset='UTF-8'></head><body>";
         html += "<h1>🐱 Litière</h1>";
         html += "<p>État : " + String(occupe ? "🔴 Occupée" : "🟢 Libre") + "</p>";
-        html += "<p>Dernier pipi Sully : " + String((millis() - sullyDernierPipi) / 3600000) +
-                "h ago</p>";
-        html += "<p>Dernier pipi Krokmou : " + String((millis() - krokmouDernierPipi) / 3600000) +
-                "h ago</p>";
-        html += "<p>Dernier caca Sully : " + String((millis() - sullyDernierCaca) / 3600000) +
-                "h ago</p>";
-        html += "<p>Dernier caca Krokmou : " + String((millis() - krokmouDernierCaca) / 3600000) +
-                "h ago</p>";
         html += "<a href='/logs'>Logs</a> | <a href='/tare'>Tare</a> | <a href='/update'>OTA</a>";
         html += "</body></html>";
         server.send(200, "text/html", html);
@@ -137,9 +108,7 @@ void setup() {
     server.on("/status", []() {
         String json = "{";
         json += "\"occupe\":" + String(occupe ? "true" : "false") + ",";
-        json += "\"uptime\":" + String(millis() / 1000) + ",";
-        json += "\"sully_dernier_pipi\":" + String(sullyDernierPipi) + ",";
-        json += "\"krokmou_dernier_pipi\":" + String(krokmouDernierPipi);
+        json += "\"uptime\":" + String(millis() / 1000);
         json += "}";
         server.send(200, "application/json", json);
     });
@@ -150,18 +119,8 @@ void setup() {
         delay(500);
         M5.dis.fillpix(LED_VERT);
         verifierConnexion();
-        envoyerNotification("Système", "Tare distante faite!", 0, 0, 0, "");
+        envoyerNotification("Système", "Tare distante faite!");
         server.send(200, "text/plain", "Tare effectuée !");
-    });
-
-    server.on("/reset-nvs", []() {
-        prefs.clear();
-        sullyDernierPipi = 0;
-        sullyDernierCaca = 0;
-        krokmouDernierPipi = 0;
-        krokmouDernierCaca = 0;
-        addLog("NVS réinitialisé ✅");
-        server.send(200, "text/plain", "NVS réinitialisé !");
     });
 
     server.on("/logs", []() {
@@ -213,7 +172,7 @@ void setup() {
 
     // Notification démarrage
     verifierConnexion();
-    envoyerNotification("Système", "Litière connectée et prête !", 0, 0, 0, "");
+    envoyerNotification("Système", "Litière connectée et prête !");
 
     // Valider le firmware (rollback protection)
     esp_ota_mark_app_valid_cancel_rollback();
@@ -230,7 +189,6 @@ void loop() {
     M5.update();
 
     float weight = scale.get_units(5) / 1000.0;
-    static unsigned long dernierCheckSante = 0;
 
     // Vérification WiFi périodique
     if (millis() - dernierCheckWifi > WIFI_CHECK_INTERVAL && !otaInProgress) {
@@ -247,8 +205,8 @@ void loop() {
     if (occupe && (millis() - tempsEntree > DUREE_SESSION_MAX_MS)) {
         addLog("⚠️ Session +10 min détectée. Reset forcé.");
         verifierConnexion();
-        envoyerNotification("Système", "*Alerte Sécurité*", 0, poidsEntree, 0,
-                            "Session de +10 min détectée. Reset automatique.");
+        envoyerNotification("Système",
+                            "*Alerte Sécurité, Session de +10 min détectée. Reset automatique.");
         scale.tare();
         occupe = false;
         exitPending = false;
@@ -282,15 +240,8 @@ void loop() {
         M5.dis.fillpix(LED_VERT);
         addLog(">>> TARE MANUELLE");
         verifierConnexion();
-        envoyerNotification("Système", "Tare manuelle faite!", 0, 0, 0, "");
+        envoyerNotification("Système", "Tare manuelle faite!");
     }
-
-    // 6. Alertes santé
-    if (millis() - dernierCheckSante > SANTE_CHECK_INTERVAL) {
-        dernierCheckSante = millis();
-        verifierAlertesSante();
-    }
-
     if (!otaInProgress) delay(200);
 }
 
@@ -342,7 +293,6 @@ void detecterEntree() {
 }
 
 void traiterSortieChat() {
-    // Vérifier que le chat est vraiment parti
     float weightCheck = scale.get_units(5) / 1000.0;
     if (weightCheck > SEUIL_SORTIE_KG) {
         occupe = true;
@@ -351,33 +301,18 @@ void traiterSortieChat() {
         return;
     }
 
-    // Attendre stabilisation de la litière
     esp_task_wdt_reset();
     delay(3000);
     esp_task_wdt_reset();
 
-    float poidsFinalGrames = scale.get_units(30);
-    unsigned long dureeSession = (millis() - tempsEntree) / 1000;
+    float exitWeightDeltaG = scale.get_units(30);
+    unsigned long durationSeconds = (millis() - tempsEntree) / 1000;
 
-    String nomChat = identifierChat(poidsEntree);
-    setCouleurChat(nomChat);
-
-    String diagnostic = "";
-    String alerte = "";
-    calculerDiagnostic(nomChat, poidsFinalGrames, dureeSession, diagnostic, alerte);
-
-    if (dureeSession > DUREE_ALERTE_S && alerte == "") {
-        alerte = "*Attention :* Session extrêmement longue (+4 min).";
-    }
-
-    addLog("Chat : " + nomChat + " | " + diagnostic + " | " + String(poidsFinalGrames, 1) + "g | " +
-           String(dureeSession) + "s");
+    addLog("Sortie — entry=" + String(poidsEntree, 2) + "kg delta=" + String(exitWeightDeltaG, 1) +
+           "g duration=" + String(durationSeconds) + "s");
 
     verifierConnexion();
-    envoyerNotification(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
-    envoyerDonneesSheets(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte);
-    envoyerDonneesGCP(nomChat, diagnostic, poidsFinalGrames, poidsEntree, dureeSession, alerte,
-                      deviceId);
+    envoyerDonneesGCP(poidsEntree, exitWeightDeltaG, durationSeconds, deviceId);
 
     // Reset
     esp_task_wdt_reset();
@@ -408,8 +343,8 @@ void detecterNettoyage() {
         addLog(">>> AUTO-TARE (Nettoyage confirmé 3/3)");
         scale.tare();
         verifierConnexion();
-        envoyerNotification("Système", "Nettoyage détecté", 0, 0, 0,
-                            "La litière a été remise à zéro automatiquement.");
+        envoyerNotification("Système",
+                            "Nettoyage détecté, la litière a été remise à zéro automatiquement.");
         delay(1000);
         M5.dis.fillpix(LED_VERT);
     } else {
