@@ -144,10 +144,14 @@ void setup() {
     });
 
     server.on("/test-scale", []() {
-        float raw = scale.get_units(5);
-        float rawDiv1000 = scale.get_units(5) / 1000.0;
-        String result = "raw=" + String(raw, 3) + " | /1000=" + String(rawDiv1000, 3);
-        addLog("TEST SCALE: " + result);
+        long raw = scale.read_average(20);
+        long offset = scale.get_offset();
+        long net = raw - offset;
+        float cal = net / 1595.0f;
+
+        String result = "raw=" + String(raw) + " | offset=" + String(offset) +
+                        " | net=" + String(net) + " | cal_scale=" + String(cal, 4);
+        addLog("CALIBRATION: " + result);
         server.send(200, "text/plain", result);
     });
 
