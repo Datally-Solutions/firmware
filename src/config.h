@@ -26,7 +26,6 @@ const int MAX_LOG_LINES = 50;
 const uint32_t LED_BLEU = 0x0000ff;
 const uint32_t LED_ROUGE = 0xff0000;
 const uint32_t LED_VERT = 0x00ff00;
-const uint32_t LED_ORANGE = 0xffa500;
 const uint32_t LED_CYAN = 0x00ffff;
 const uint32_t LED_ROUGE_SOMBRE = 0x330000;
 
