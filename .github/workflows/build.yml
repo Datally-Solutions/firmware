@@ -76,10 +76,3 @@ jobs:
           path: latest.json
           destination: ${{ secrets.GCP_PROJECT_ID }}-firmware
           process_gcloudignore: false
-
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware
-          path: .pio/build/m5stack-atom/firmware.bin
-          retention-days: 30
