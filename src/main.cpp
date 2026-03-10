@@ -41,6 +41,9 @@ int logLineCount = 0;
 
 unsigned long lastExitTime = 0;
 
+float dernierPoidsSession = 0;
+unsigned long dernierEventSession = 0;
+
 // ---------------------------------------------------------------------------
 // FORWARD DECLARATIONS
 // ---------------------------------------------------------------------------
@@ -291,6 +294,30 @@ void loop() {
         verifierAlertesSante();
     }
 
+    // 7. Détection double session
+    if (occupe && dernierPoidsSession > 0 &&
+        (millis() - dernierEventSession > DUREE_MIN_ENTRE_ACTIONS_MS)) {
+        float currentWeightG = scale.get_units(10);
+        float delta = abs(currentWeightG - dernierPoidsSession);
+        if (delta > SEUIL_DOUBLE_SESSION_G) {
+            addLog("Double session détectée! Delta: " + String(delta, 1) + "g");
+            // Send intermediate event
+            String nomChat = identifierChat(poidsEntree);
+            unsigned long dureePartielle = (millis() - tempsEntree) / 1000;
+            String diagnostic = "";
+            String alerte = "";
+            calculerDiagnostic(nomChat, dernierPoidsSession, dureePartielle, diagnostic, alerte);
+            verifierConnexion();
+            envoyerDonneesGCP(nomChat, diagnostic, dernierPoidsSession, poidsEntree, dureePartielle,
+                              alerte, deviceId);
+            // Reset session timer and weight reference for second action
+            tempsEntree = millis();
+            dernierPoidsSession = currentWeightG;
+            dernierEventSession = millis();
+            addLog("Nouvel événement intermédiaire envoyé: " + diagnostic);
+        }
+    }
+
     if (!otaInProgress) delay(200);
 }
 
@@ -336,6 +363,8 @@ void detecterEntree() {
         exitPending = false;
         poidsEntree = weightStable;
         tempsEntree = millis();
+        dernierPoidsSession = weightStable * 1000.0;  // convert to grams
+        dernierEventSession = millis();
         M5.dis.fillpix(LED_ROUGE);
         addLog("--- CHAT ENTRÉ : " + String(poidsEntree, 2) + "kg ---");
     }

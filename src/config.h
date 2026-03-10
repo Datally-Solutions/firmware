@@ -59,3 +59,7 @@ const uint32_t LED_CYAN = 0x00ffff;
 const uint32_t LED_ROUGE_SOMBRE = 0x330000;
 
 const unsigned long NETTOYAGE_COOLDOWN_MS = 30000;  // 30s after exit before cleaning can trigger
+
+// double session
+const float SEUIL_DOUBLE_SESSION_G = 30.0;               // min grams between two actions
+const unsigned long DUREE_MIN_ENTRE_ACTIONS_MS = 30000;  // 30s min between two actions
