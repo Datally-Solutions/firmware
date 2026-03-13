@@ -314,9 +314,30 @@ void traiterSortieChat() {
     }
 
     esp_task_wdt_reset();
-    delay(3000);
-    esp_task_wdt_reset();
 
+    // ── Wait for scale to stabilize ──────────────────────────────────────
+    float prev = scale.get_units(10);
+    int stableCount = 0;
+    int maxAttempts = 20;  // max 10 seconds
+
+    while (stableCount < 3 && maxAttempts > 0) {
+        esp_task_wdt_reset();
+        delay(500);
+        float current = scale.get_units(10);
+        float diff = abs(current - prev);
+
+        addLog("Stabilisation: current=" + String(current, 1) + "g diff=" + String(diff, 1) + "g");
+
+        if (diff < 5.0) {  // stable within 5g
+            stableCount++;
+        } else {
+            stableCount = 0;  // reset if still moving
+        }
+        prev = current;
+        maxAttempts--;
+    }
+
+    // ── Read final delta ─────────────────────────────────────────────────
     float exitWeightDeltaG = scale.get_units(30);
     unsigned long durationSeconds = (millis() - tempsEntree) / 1000;
 
