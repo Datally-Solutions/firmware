@@ -5,7 +5,7 @@
 #define LOADCELL_SCK_PIN 26
 
 // --- CALIBRATION BALANCE ---
-const float CALIBRATION_SCALE = 21.2286f;
+const float CALIBRATION_SCALE = 24.99f;
 
 // --- SEUILS POIDS (kg) ---
 const float SEUIL_ENTREE_KG = 2.0;
