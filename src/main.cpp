@@ -155,6 +155,19 @@ void setup() {
         server.send(200, "text/plain", result);
     });
 
+    server.on("/calibration", []() {
+        scale.set_scale(1.0);
+        long kg_adc = scale.read_average(20);
+        // 3. Read the current offset at 0g
+        kg_adc = kg_adc - scale.get_offset();
+        // 4. Calculate and configure the scale parameter for 5kg
+        float cal = kg_adc / (5 * 1000.0);
+        scale.set_scale(cal);
+        String result = "Cal found at 5kg: " + String(cal) + "kg_adc : " + String(kg_adc);
+        addLog("CALIBRATION: " + result);
+        server.send(200, "text/plain", result);
+    });
+
     // OTA
     ElegantOTA.begin(&server);
     ElegantOTA.setAutoReboot(true);
